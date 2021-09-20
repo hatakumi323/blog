@@ -18,6 +18,9 @@ if (!empty($_POST['title']) && !empty($_POST['body'])) {
   $article = new Article();
   $article->setTitle($title);
   $article->setBody($body);
+  if (isset($_FILES['image']) && is_uploaded_file($_FILES['image']['tmp_name'])) {
+    $article->setFile($_FILES['image']);
+  }
   $article->save();
 
   header('Location: backend.php');
@@ -85,7 +88,7 @@ if (!empty($_POST['title']) && !empty($_POST['body'])) {
     <div class="row">
       <div class="col-md-12">
 
-        <form action="post.php" method="post">
+        <form action="post.php" method="post" enctype="multipart/form-data">
           <div class="mb-3">
             <label class="form-label">タイトル</label>
             <?php echo !empty($title_alert) ? '<div class="alert alert-danger">' . $title_alert . '</div>' : '' ?>
@@ -95,6 +98,10 @@ if (!empty($_POST['title']) && !empty($_POST['body'])) {
             <label class="form-label">本文</label>
             <?php echo !empty($body_alert) ? '<div class="alert alert-danger">' . $body_alert . '</div>' : '' ?>
             <textarea name="body" class="form-control" rows="10"><?php echo $body; ?></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">画像</label>
+            <input type="file" name="image" class="form-control">
           </div>
           <div class="mb-3">
             <button type="submit" class="btn btn-primary">投稿する</button>
