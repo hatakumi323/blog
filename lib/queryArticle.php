@@ -85,11 +85,8 @@ class QueryArticle extends connect
     if ($this->article->getId()) {
       $id = $this->article->getId();
       if ($file = $this->article->getFile()) {
-        // ファイルが既にある場合、古いファイルを削除する
-        if ($this->article->getFilename()) {
-          unlink(__DIR__ . '/../album/thumbs-' . $this->article->getFilename());
-          unlink(__DIR__ . '/../album/' . $this->article->getFilename());
-        }
+
+        $this->deleteFile();
         // 新しいファイルのアップロード
         $this->article->setFilename($this->saveFile($file['tmp_name']));
         $filename = $this->article->getFilename();
@@ -117,9 +114,27 @@ class QueryArticle extends connect
     }
   }
 
+  public function deleteFile()
+  {
+    if ($this->article->getFilename()) {
+      unlink(__DIR__ . '/../album/thumbs-' . $this->article->getFilename());
+      unlink(__DIR__ . '/../album/' . $this->article->getFilename());
+    }
+  }
+
+  public function delete()
+  {
+    if ($this->article->getId()) {
+      $this->deleteFile();
+      $id = $this->article->getId();
+      $stmt = $this->dbh->prepare("UPDATE articles SET is_delete=1 WHERE id=:id");
+      $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+      $stmt->execute();
+    }
+  }
   public function find($id)
   {
-    $stmt = $this->dbh->prepare("SELECT * FROM articles WHERE id=:id");
+    $stmt = $this->dbh->prepare("SELECT * FROM articles WHERE id=:id AND is_delete=0");
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -138,7 +153,7 @@ class QueryArticle extends connect
 
   public function findAll()
   {
-    $stmt = $this->dbh->prepare("SELECT * FROM articles");
+    $stmt = $this->dbh->prepare("SELECT * FROM articles WHERE is_delete=0 ORDER BY created_at DESC");
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $articles = array();
