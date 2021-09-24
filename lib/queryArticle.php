@@ -150,26 +150,62 @@ class QueryArticle extends connect
     return $articles;
   }
 
-  public function getPager($page = 1, $limit = 10)
+  public function getPager($page = 1, $limit = 10, $month = null)
   {
-    $start = ($page - 1) * $limit;  // LIMIT x, y：1ページ目を表示するとき、xは0になる
+    $page = ($page - 1) * $limit;
     $pager = array('total' => null, 'articles' => null);
 
+    if ($month) {
+      $month .= '%';
+    }
+
     // 総記事数
-    $stmt = $this->dbh->prepare("SELECT COUNT(*) FROM articles WHERE is_delete=0");
+    if ($month) {
+      $stmt = $this->dbh->prepare("SELECT COUNT(*) FROM articles WHERE is_delete=0 AND created_at LIKE :month");
+      $stmt->bindParam(':month', $month, PDO::PARAM_STR);
+    } else {
+      $stmt = $this->dbh->prepare("SELECT COUNT(*) FROM articles WHERE is_delete=0");
+    }
     $stmt->execute();
     $pager['total'] = $stmt->fetchColumn();
 
+
+
+
     // 表示するデータ
-    $stmt = $this->dbh->prepare("SELECT * FROM articles
-      WHERE is_delete=0
-      ORDER BY created_at DESC
-      LIMIT :start, :limit");
-    $stmt->bindParam(':start', $start, PDO::PARAM_INT);
+    if ($month) {
+      $stmt = $this->dbh->prepare("SELECT * FROM articles
+        WHERE is_delete=0 AND created_at LIKE :month
+        ORDER BY created_at DESC
+        LIMIT :start, :limit");
+      $stmt->bindParam(':month', $month, PDO::PARAM_STR);
+    } else {
+      $stmt = $this->dbh->prepare("SELECT * FROM articles
+        WHERE is_delete=0
+        ORDER BY created_at DESC
+        LIMIT :start, :limit");
+    }
+    $stmt->bindParam(':start', $page, PDO::PARAM_INT);
     $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
     $pager['articles'] = $this->getArticles($stmt->fetchAll(PDO::FETCH_ASSOC));
     return $pager;
+  }
+
+  public function getMonthlyArchiveMenu()
+  {
+    $stmt = $this->dbh->prepare("
+      SELECT DATE_FORMAT(created_at, '%Y-%m') AS month_menu, COUNT(*) AS count
+      FROM articles
+      WHERE is_delete = 0
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+      ORDER BY month_menu DESC");
+    $stmt->execute();
+    $return = array();
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $return[] = array('month' => $row['month_menu'], 'count' => $row['count']);
+    }
+    return $return;
   }
 
   private function getArticles($results)
