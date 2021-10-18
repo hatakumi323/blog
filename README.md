@@ -20,3 +20,16 @@
     環境構築（Windows/Mac）  
     アプリケーションとDBの設計  
     セッションの仕組み
+
+# イメージ画像
+
+### ログイン画面
+<img src="https://i.gyazo.com/44795408f80c5a56e873c32e4f4449eb.png" alt="Image from Gyazo" width="1280"/>
+
+### 記事記入画面
+<img src="https://i.gyazo.com/7c9b7ae8ddd11398eb8a9affbe9e16b5.png" alt="Image from Gyazo" width="1270"/>
+
+### 提示版画面
+<img src="https://i.gyazo.com/35ceeef5f1ee86585abecd9baf3517c7.png" alt="Image from Gyazo" width="1276"/>
+
+
